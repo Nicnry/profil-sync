@@ -6,20 +6,13 @@ import CVFormInputTitle from '@/components/cv/inputs/cvFormInputTitle';
 import CVFormInputDateRange from '@/components/cv/inputs/cvFormInputDateRange';
 import Button from '@/components/ui/button';
 import Modal from '@/components/ui/modal';
+import { useCV } from '@/context/cvContext';
 
 interface CVFormColumnBlockProps {
   id: string;
   title: string;
-  onTitleChange: (id: string, newTitle: string) => void;
-  onRemove?: () => void;
   componentChildren?: NestedBlockInfo[];
   components?: ComponentInfo[];
-  onAddChild?: (parentId: string) => void;
-  onRemoveChild?: (parentId: string, childId: string) => void;
-  onChildTitleChange?: (parentId: string, childId: string, newTitle: string) => void;
-  onAddComponent?: (blockId: string, componentType: ComponentType) => void;
-  onRemoveComponent?: (blockId: string, componentId: string) => void;
-  onUpdateComponentProps?: (blockId: string, componentId: string, newProps: Record<string, string>) => void;
   depth?: number;
 }
 
@@ -62,18 +55,19 @@ const ComponentSelectionContent = ({ onSelectComponent }: ComponentSelectionProp
 const CVFormColumnBlock = ({ 
   id, 
   title, 
-  onTitleChange, 
-  onRemove,
   componentChildren = [],
   components = [],
-  onAddChild,
-  onRemoveChild,
-  onChildTitleChange,
-  onAddComponent,
-  onRemoveComponent,
-  onUpdateComponentProps,
   depth = 0
 }: CVFormColumnBlockProps) => {
+  const {
+    updateBlockTitle,
+    removeBlock,
+    addNestedBlock,
+    addComponent,
+    removeComponent,
+    updateComponentProps
+  } = useCV();
+
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [blockTitle, setBlockTitle] = useState<string>(title);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -98,9 +92,9 @@ const CVFormColumnBlock = ({
     
     if (prevTitle.current !== blockTitle) {
       prevTitle.current = blockTitle;
-      onTitleChange(id, blockTitle);
+      updateBlockTitle(id, blockTitle);
     }
-  }, [blockTitle, id, onTitleChange]);
+  }, [blockTitle, id, updateBlockTitle]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -113,7 +107,7 @@ const CVFormColumnBlock = ({
     if (!blockTitle.trim()) {
       const defaultTitle = 'Sans titre';
       setBlockTitle(defaultTitle);
-      onTitleChange(id, defaultTitle);
+      updateBlockTitle(id, defaultTitle);
     }
   };
 
@@ -127,20 +121,16 @@ const CVFormColumnBlock = ({
   };
   
   const handleAddChild = () => {
-    if (onAddChild) {
-      onAddChild(id);
-      if (!isExpanded) {
-        setIsExpanded(true);
-      }
+    addNestedBlock(id);
+    if (!isExpanded) {
+      setIsExpanded(true);
     }
   };
   
   const handleAddComponent = (componentType: ComponentType) => {
-    if (onAddComponent) {
-      onAddComponent(id, componentType);
-      if (!isExpanded) {
-        setIsExpanded(true);
-      }
+    addComponent(id, componentType);
+    if (!isExpanded) {
+      setIsExpanded(true);
     }
   };
 
@@ -171,11 +161,9 @@ const CVFormColumnBlock = ({
             id={component.id} 
             defaultValue={component.props?.defaultValue || ""}
             onChange={(value) => {
-              if (onUpdateComponentProps) {
-                onUpdateComponentProps(id, component.id, { defaultValue: value });
-              }
+              updateComponentProps(id, component.id, { defaultValue: value });
             }}
-            onRemove={() => onRemoveComponent && onRemoveComponent(id, component.id)}
+            onRemove={() => removeComponent(id, component.id)}
             error={component.errors?.title}
           />
         );
@@ -187,11 +175,9 @@ const CVFormColumnBlock = ({
             fromValue={component.props?.from || ""}
             toValue={component.props?.to || ""}
             onChange={({ from, to }) => {
-              if (onUpdateComponentProps) {
-                onUpdateComponentProps(id, component.id, { from, to });
-              }
+              updateComponentProps(id, component.id, { from, to });
             }}
-            onRemove={() => onRemoveComponent && onRemoveComponent(id, component.id)}
+            onRemove={() => removeComponent(id, component.id)}
             errors={{
               from: component.errors?.from,
               to: component.errors?.to
@@ -245,20 +231,18 @@ const CVFormColumnBlock = ({
             )}
           </Button>
           
-          {onRemove && (
-            <Button
-              variant="danger"
-              size="icon"
-              isRounded
-              onClick={onRemove}
-              aria-label="Supprimer ce bloc"
-              title="Supprimer ce bloc"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-            </Button>
-          )}
+          <Button
+            variant="danger"
+            size="icon"
+            isRounded
+            onClick={() => removeBlock(id)}
+            aria-label="Supprimer ce bloc"
+            title="Supprimer ce bloc"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </Button>
         </div>
       </div>
       
@@ -279,18 +263,6 @@ const CVFormColumnBlock = ({
                   title={child.title}
                   componentChildren={child.children}
                   components={child.components}
-                  onTitleChange={(childId, newTitle) => {
-                    if (onChildTitleChange) {
-                      onChildTitleChange(id, childId, newTitle);
-                    }
-                  }}
-                  onRemove={() => onRemoveChild && onRemoveChild(id, child.id)}
-                  onAddChild={onAddChild}
-                  onRemoveChild={onRemoveChild}
-                  onChildTitleChange={onChildTitleChange}
-                  onAddComponent={onAddComponent}
-                  onRemoveComponent={onRemoveComponent}
-                  onUpdateComponentProps={onUpdateComponentProps}
                   depth={depth + 1}
                 />
               ))}
@@ -302,22 +274,20 @@ const CVFormColumnBlock = ({
           ) : null}
           
           <div className="flex justify-center mt-4 space-x-2">
-            {onAddComponent && (
-              <Button
-                variant="warning"
-                size="icon"
-                isRounded
-                onClick={() => setShowComponentModal(true)}
-                aria-label="Ajouter un champ"
-                title="Ajouter un champ"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-              </Button>
-            )}
+            <Button
+              variant="warning"
+              size="icon"
+              isRounded
+              onClick={() => setShowComponentModal(true)}
+              aria-label="Ajouter un champ"
+              title="Ajouter un champ"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+            </Button>
             
-            {onAddChild && depth < 1 && (
+            {depth < 1 && (
               <Button
                 variant="primary"
                 size="icon"

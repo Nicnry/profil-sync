@@ -1,22 +1,22 @@
 'use client';
 
-import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import CVFormColumnSelector from '@/components/cv/selectors/cvFormColumnSelector';
 import CVFormColumnContainer from '@/components/cv/blocks/cvFormColumnContainer';
 import BlockDebugList from '@/components/cv/debug/blockDebugList';
 import Button from '@/components/ui/button';
-import useCVBlockManagement from '@/hooks/useCVBlockManagement';
 import { countAllBlocks, countAllComponents } from '@/utils/helpers';
-import { CVFormInputs, ColumnCount } from '@/types/cv';
+import { CVFormInputs } from '@/types/cv';
+import { useCV } from '@/context/cvContext';
 
 const CVForm = () => {
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-  
-  const {
+  const { 
     blocks,
-    onChange: handleBlocksChange
-  } = useCVBlockManagement();
+    columns,
+    isSubmitted,
+    setColumns,
+    saveCV
+  } = useCV();
   
   const { 
     register, 
@@ -26,28 +26,19 @@ const CVForm = () => {
     formState: { errors } 
   } = useForm<CVFormInputs>({
     defaultValues: {
-      columns: 1
+      columns: columns
     }
   });
   
   const selectedColumns = watch('columns');
   
   const onSubmit: SubmitHandler<CVFormInputs> = (data) => {
-    const formData = {
-      ...data,
-      blocks
-    };
-    
-    console.log('Données du formulaire:', formData);
-    setIsSubmitted(true);
-    
-    setTimeout(() => {
-      setIsSubmitted(false);
-    }, 3000);
+    saveCV(data);
   };
   
-  const handleColumnsChange = (columns: ColumnCount) => {
-    setValue('columns', columns);
+  const handleColumnsChange = (newColumns: typeof columns) => {
+    setValue('columns', newColumns);
+    setColumns(newColumns);
   };
   
   const totalBlockCount = countAllBlocks(blocks);
@@ -109,7 +100,6 @@ const CVForm = () => {
           </p>
           <CVFormColumnContainer 
             columns={selectedColumns} 
-            onChange={handleBlocksChange} 
           />
           {blocks.length === 0 && (
             <p className="mt-2 text-sm text-amber-600">

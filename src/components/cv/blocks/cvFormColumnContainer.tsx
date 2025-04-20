@@ -1,29 +1,19 @@
+'use client';
+
 import { ColumnCount } from '@/types/cv';
 import CVFormColumnBlock from '@/components/cv/blocks/cvFormColumnBlock';
 import Button from '@/components/ui/button';
-import useCVBlockManagement from '@/hooks/useCVBlockManagement';
-import { BlockInfo } from '@/types/cv';
+import { useCV } from '@/context/cvContext';
 
 interface CVFormColumnContainerProps {
   columns: ColumnCount;
-  onChange: (blocks: BlockInfo[]) => void;
 }
 
-const CVFormColumnContainer = ({ columns, onChange }: CVFormColumnContainerProps) => {
+const CVFormColumnContainer = ({ columns }: CVFormColumnContainerProps) => {
   const {
     addBlock,
-    removeBlock,
-    updateBlockTitle,
-    addNestedBlock,
-    removeNestedBlock,
-    updateNestedBlockTitle,
-    addComponent,
-    removeComponent,
-    updateComponentProps,
     getBlocksForColumn
-  } = useCVBlockManagement({
-    onChange
-  });
+  } = useCV();
   
   const gridClass = 
     columns === 1 ? 'grid-cols-1' : 
@@ -46,14 +36,6 @@ const CVFormColumnContainer = ({ columns, onChange }: CVFormColumnContainerProps
                     title={block.title} 
                     componentChildren={block.children}
                     components={block.components}
-                    onTitleChange={updateBlockTitle}
-                    onRemove={() => removeBlock(block.id)}
-                    onAddChild={addNestedBlock}
-                    onRemoveChild={removeNestedBlock}
-                    onChildTitleChange={updateNestedBlockTitle}
-                    onAddComponent={addComponent}
-                    onRemoveComponent={removeComponent}
-                    onUpdateComponentProps={updateComponentProps}
                   />
                 ))}
               </div>
