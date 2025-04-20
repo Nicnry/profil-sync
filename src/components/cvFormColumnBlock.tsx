@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ComponentType, ComponentInfo, NestedBlockInfo } from '@/components/componentTypes';
 import CVFormInputTitle from '@/components/cvFormInputTitle';
-import CVFormInputDateRange from '@/components/CVFormInputDateRange';
+import CVFormInputDateRange from '@/components/cvFormInputDateRange';
 
 interface CVFormColumnBlockProps {
   id: string;
