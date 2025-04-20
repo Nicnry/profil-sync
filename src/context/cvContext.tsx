@@ -1,68 +1,115 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { BlockInfo, NestedBlockInfo, ComponentInfo, ComponentType, ColumnCount, CVFormInputs } from '@/types/cv';
+import { BlockInfo, NestedBlockInfo, ComponentInfo, ComponentType, ColumnCount, RowCount, CVFormInputs, RowConfig } from '@/types/cv';
 import { generateId, cloneBlocks } from '@/utils/helpers';
 
-// Définition de l'interface du contexte
 interface CVContextType {
-  // État
   blocks: BlockInfo[];
-  columns: ColumnCount;
+  rowsConfig: RowConfig[];
   isSubmitted: boolean;
-  // Gestion des blocs
-  addBlock: (columnIndex: number, title?: string) => void;
+  addBlock: (rowIndex: number, columnIndex: number, title?: string) => void;
   removeBlock: (blockId: string) => void;
   updateBlockTitle: (blockId: string, newTitle: string) => void;
   addNestedBlock: (parentId: string, title?: string) => void;
   removeNestedBlock: (parentId: string, childId: string) => void;
   updateNestedBlockTitle: (parentId: string, childId: string, newTitle: string) => void;
-  // Gestion des composants
   addComponent: (blockId: string, componentType: ComponentType) => void;
   removeComponent: (blockId: string, componentId: string) => void;
   updateComponentProps: (blockId: string, componentId: string, newProps: Record<string, string>) => void;
-  // Gestion des colonnes
-  getBlocksForColumn: (columnIndex: number) => BlockInfo[];
-  setColumns: (columns: ColumnCount) => void;
-  // Gestion du formulaire
+  getBlocksForRow: (rowIndex: number) => BlockInfo[];
+  getBlocksForColumnAndRow: (rowIndex: number, columnIndex: number) => BlockInfo[];
+  getRowCount: () => number;
+  getColumnsForRow: (rowIndex: number) => ColumnCount;
+  setColumnsForRow: (rowIndex: number, columns: ColumnCount) => void;
+  setRowCount: (count: RowCount) => void;
   saveCV: (data: Partial<CVFormInputs>) => void;
 }
 
-// Création du contexte avec une valeur par défaut (pour TypeScript)
 const CVContext = createContext<CVContextType | undefined>(undefined);
 
-// Props pour le provider
 interface CVProviderProps {
   children: ReactNode;
   initialBlocks?: BlockInfo[];
-  initialColumns?: ColumnCount;
+  initialRowCount?: RowCount;
 }
 
-// Provider qui va encapsuler l'application
 export const CVProvider: React.FC<CVProviderProps> = ({ 
   children, 
   initialBlocks = [],
-  initialColumns = 1
+  initialRowCount = 1
 }) => {
-  // État
   const [blocks, setBlocks] = useState<BlockInfo[]>(initialBlocks);
-  const [columns, setColumns] = useState<ColumnCount>(initialColumns);
+  const [rowsConfig, setRowsConfig] = useState<RowConfig[]>(
+    Array.from({ length: initialRowCount }, (_, index) => ({
+      rowIndex: index,
+      columns: 1,
+      label: index === 0 ? 'En-tête' : index === initialRowCount - 1 ? 'Pied de page' : 'Contenu principal'
+    }))
+  );
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
-  /**
-   * Obtenir tous les blocs d'une colonne spécifique
-   */
-  const getBlocksForColumn = useCallback((columnIndex: number) => {
-    return blocks.filter(block => block.columnIndex === columnIndex);
+  const getRowCount = useCallback(() => {
+    return rowsConfig.length;
+  }, [rowsConfig]);
+
+  const getColumnsForRow = useCallback((rowIndex: number) => {
+    const rowConfig = rowsConfig.find(row => row.rowIndex === rowIndex);
+    return rowConfig ? rowConfig.columns : 1;
+  }, [rowsConfig]);
+
+  const setColumnsForRow = useCallback((rowIndex: number, columns: ColumnCount) => {
+    setRowsConfig(prevConfig => {
+      const newConfig = [...prevConfig];
+      const index = newConfig.findIndex(row => row.rowIndex === rowIndex);
+      
+      if (index !== -1) {
+        newConfig[index] = { ...newConfig[index], columns };
+      }
+      
+      return newConfig;
+    });
+  }, []);
+
+  const setRowCount = useCallback((count: RowCount) => {
+    setRowsConfig(prevConfig => {
+      if (count > prevConfig.length) {
+        const newRows: RowConfig[] = Array.from(
+          { length: count - prevConfig.length }, 
+          (_, index) => ({
+            rowIndex: prevConfig.length + index,
+            columns: 1,
+            label: prevConfig.length + index === count - 1 ? 'Pied de page' : 'Contenu principal'
+          })
+        );
+        return [...prevConfig, ...newRows];
+      }
+      
+      if (count < prevConfig.length) {
+        setBlocks(prevBlocks => 
+          prevBlocks.filter(block => block.rowIndex < count)
+        );
+        
+        return prevConfig.slice(0, count);
+      }
+      
+      return prevConfig;
+    });
+  }, []);
+
+  const getBlocksForRow = useCallback((rowIndex: number) => {
+    return blocks.filter(block => block.rowIndex === rowIndex);
   }, [blocks]);
 
-  /**
-   * Ajouter un nouveau bloc à une colonne
-   */
-  const addBlock = useCallback((columnIndex: number, title?: string) => {
+  const getBlocksForColumnAndRow = useCallback((rowIndex: number, columnIndex: number) => {
+    return blocks.filter(block => block.rowIndex === rowIndex && block.columnIndex === columnIndex);
+  }, [blocks]);
+
+  const addBlock = useCallback((rowIndex: number, columnIndex: number, title?: string) => {
     const newBlock: BlockInfo = {
       id: generateId('block'),
       title: title || `Bloc ${blocks.length + 1}`,
+      rowIndex,
       columnIndex,
       children: [],
       components: []
@@ -71,16 +118,10 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     setBlocks(prevBlocks => [...prevBlocks, newBlock]);
   }, [blocks.length]);
   
-  /**
-   * Supprimer un bloc par ID
-   */
   const removeBlock = useCallback((blockId: string) => {
     setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockId));
   }, []);
   
-  /**
-   * Mettre à jour le titre d'un bloc
-   */
   const updateBlockTitle = useCallback((blockId: string, newTitle: string) => {
     setBlocks(prevBlocks => 
       prevBlocks.map(block => 
@@ -89,9 +130,6 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     );
   }, []);
   
-  /**
-   * Ajouter un sous-bloc à un parent
-   */
   const addNestedBlock = useCallback((parentId: string, title?: string) => {
     const newChild: NestedBlockInfo = {
       id: generateId('nested'),
@@ -125,10 +163,7 @@ export const CVProvider: React.FC<CVProviderProps> = ({
       return updatedBlocks;
     });
   }, []);
-  
-  /**
-   * Supprimer un sous-bloc
-   */
+
   const removeNestedBlock = useCallback((parentId: string, childId: string) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -156,9 +191,6 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     });
   }, []);
   
-  /**
-   * Mettre à jour le titre d'un sous-bloc
-   */
   const updateNestedBlockTitle = useCallback((parentId: string, childId: string, newTitle: string) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -190,9 +222,6 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     });
   }, []);
   
-  /**
-   * Ajouter un composant à un bloc
-   */
   const addComponent = useCallback((blockId: string, componentType: ComponentType) => {
     const newComponent: ComponentInfo = {
       id: generateId('comp'),
@@ -226,9 +255,6 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     });
   }, []);
   
-  /**
-   * Supprimer un composant d'un bloc
-   */
   const removeComponent = useCallback((blockId: string, componentId: string) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -256,9 +282,6 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     });
   }, []);
   
-  /**
-   * Mettre à jour les propriétés d'un composant
-   */
   const updateComponentProps = useCallback((blockId: string, componentId: string, newProps: Record<string, string>) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -293,12 +316,10 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     });
   }, []);
 
-  /**
-   * Enregistrer le CV (soumission du formulaire)
-   */
   const saveCV = useCallback((data: Partial<CVFormInputs>) => {
     const formData = {
       ...data,
+      rowsConfig,
       blocks
     };
     
@@ -308,12 +329,11 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     setTimeout(() => {
       setIsSubmitted(false);
     }, 3000);
-  }, [blocks]);
+  }, [blocks, rowsConfig]);
 
-  // Valeur du contexte
   const value: CVContextType = {
     blocks,
-    columns,
+    rowsConfig,
     isSubmitted,
     addBlock,
     removeBlock,
@@ -324,8 +344,12 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     addComponent,
     removeComponent,
     updateComponentProps,
-    getBlocksForColumn,
-    setColumns,
+    getBlocksForRow,
+    getBlocksForColumnAndRow,
+    getRowCount,
+    getColumnsForRow,
+    setColumnsForRow,
+    setRowCount,
     saveCV
   };
 
@@ -336,7 +360,6 @@ export const CVProvider: React.FC<CVProviderProps> = ({
   );
 };
 
-// Hook personnalisé pour utiliser le contexte
 export const useCV = (): CVContextType => {
   const context = useContext(CVContext);
   

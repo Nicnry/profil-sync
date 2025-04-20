@@ -1,14 +1,26 @@
 import { BlockInfo, NestedBlockInfo } from '@/types/cv';
+import { useCV } from '@/context/cvContext';
 
 interface BlockDebugListProps {
   blocks: BlockInfo[];
 }
 
 const BlockDebugList = ({ blocks }: BlockDebugListProps) => {
+  const { rowsConfig } = useCV();
+  
+  const getRowLabel = (rowIndex: number) => {
+    const rowConfig = rowsConfig.find(r => r.rowIndex === rowIndex);
+    return rowConfig?.label || `Rangée ${rowIndex + 1}`;
+  };
+
   const renderBlockDebugList = (blocks: BlockInfo[] | NestedBlockInfo[], depth = 0) => {
     return blocks.map(block => (
       <li key={block.id} className="ml-4">
-        {'  '.repeat(depth)}• {'columnIndex' in block ? `Colonne ${(block as BlockInfo).columnIndex + 1}: ` : ''}{block.title || 'Sans titre'}
+        {'  '.repeat(depth)}• {
+          'columnIndex' in block && 'rowIndex' in block ? 
+            `${getRowLabel((block as BlockInfo).rowIndex)}, Colonne ${(block as BlockInfo).columnIndex + 1}: ` : 
+            ''
+        }{block.title || 'Sans titre'}
         {block.components && block.components.length > 0 && (
           <span className="text-purple-600 text-xs ml-2">
             ({block.components.length} champ{block.components.length > 1 ? 's' : ''})

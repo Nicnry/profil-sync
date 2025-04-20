@@ -4,6 +4,17 @@
 export type ColumnCount = 1 | 2 | 3;
 
 /**
+ * Defines the number of rows in the CV layout
+ */
+export type RowCount = 1 | 2 | 3;
+
+export interface RowConfig {
+  rowIndex: number;
+  columns: ColumnCount;
+  label: string;
+}
+
+/**
  * Enum for component types in the CV
  */
 export enum ComponentType {
@@ -37,13 +48,14 @@ export interface NestedBlockInfo {
  */
 export interface BlockInfo extends NestedBlockInfo {
   columnIndex: number;
+  rowIndex: number;
 }
 
 /**
  * Form inputs for the CV builder
  */
 export interface CVFormInputs {
-  columns: ColumnCount;
+  rowCount: RowCount;
   blocks?: BlockInfo[];
 }
 

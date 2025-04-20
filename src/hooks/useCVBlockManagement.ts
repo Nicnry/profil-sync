@@ -11,7 +11,7 @@ interface UseCVBlockManagementProps {
 
 interface UseCVBlockManagementReturn {
   blocks: BlockInfo[];
-  addBlock: (columnIndex: number, title?: string) => void;
+  addBlock: (rowIndex: number, columnIndex: number, title?: string) => void;
   removeBlock: (blockId: string) => void;
   updateBlockTitle: (blockId: string, newTitle: string) => void;
   addNestedBlock: (parentId: string, title?: string) => void;
@@ -20,13 +20,12 @@ interface UseCVBlockManagementReturn {
   addComponent: (blockId: string, componentType: ComponentType) => void;
   removeComponent: (blockId: string, componentId: string) => void;
   updateComponentProps: (blockId: string, componentId: string, newProps: Record<string, string>) => void;
+  getBlocksForRow: (rowIndex: number) => BlockInfo[];
   getBlocksForColumn: (columnIndex: number) => BlockInfo[];
+  getBlocksForColumnAndRow: (rowIndex: number, columnIndex: number) => BlockInfo[];
   onChange: (updatedBlocks: BlockInfo[]) => void;
 }
 
-/**
- * Custom hook for managing CV blocks and components
- */
 const useCVBlockManagement = ({
   initialBlocks = [],
   onChange: externalOnChange
@@ -39,20 +38,15 @@ const useCVBlockManagement = ({
     }
   }, [blocks, externalOnChange]);
   
-  /**
-   * Handler for external components to update blocks
-   */
   const onChange = useCallback((updatedBlocks: BlockInfo[]) => {
     setBlocks(updatedBlocks);
   }, []);
   
-  /**
-   * Add a new block to a specific column
-   */
-  const addBlock = useCallback((columnIndex: number, title?: string) => {
+  const addBlock = useCallback((rowIndex: number, columnIndex: number, title?: string) => {
     const newBlock: BlockInfo = {
       id: generateId('block'),
       title: title || `Bloc ${blocks.length + 1}`,
+      rowIndex,
       columnIndex,
       children: [],
       components: []
@@ -61,16 +55,10 @@ const useCVBlockManagement = ({
     setBlocks(prevBlocks => [...prevBlocks, newBlock]);
   }, [blocks.length]);
   
-  /**
-   * Remove a block by ID
-   */
   const removeBlock = useCallback((blockId: string) => {
     setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockId));
   }, []);
   
-  /**
-   * Update a block's title
-   */
   const updateBlockTitle = useCallback((blockId: string, newTitle: string) => {
     setBlocks(prevBlocks => 
       prevBlocks.map(block => 
@@ -79,9 +67,6 @@ const useCVBlockManagement = ({
     );
   }, []);
   
-  /**
-   * Add a nested block to a parent
-   */
   const addNestedBlock = useCallback((parentId: string, title?: string) => {
     const newChild: NestedBlockInfo = {
       id: generateId('nested'),
@@ -116,9 +101,6 @@ const useCVBlockManagement = ({
     });
   }, []);
   
-  /**
-   * Remove a nested block
-   */
   const removeNestedBlock = useCallback((parentId: string, childId: string) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -146,9 +128,6 @@ const useCVBlockManagement = ({
     });
   }, []);
   
-  /**
-   * Update a nested block's title
-   */
   const updateNestedBlockTitle = useCallback((parentId: string, childId: string, newTitle: string) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -180,9 +159,6 @@ const useCVBlockManagement = ({
     });
   }, []);
   
-  /**
-   * Add a component to a block
-   */
   const addComponent = useCallback((blockId: string, componentType: ComponentType) => {
     const newComponent: ComponentInfo = {
       id: generateId('comp'),
@@ -216,9 +192,6 @@ const useCVBlockManagement = ({
     });
   }, []);
   
-  /**
-   * Remove a component from a block
-   */
   const removeComponent = useCallback((blockId: string, componentId: string) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -246,9 +219,6 @@ const useCVBlockManagement = ({
     });
   }, []);
   
-  /**
-   * Update a component's properties
-   */
   const updateComponentProps = useCallback((blockId: string, componentId: string, newProps: Record<string, string>) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -283,11 +253,16 @@ const useCVBlockManagement = ({
     });
   }, []);
   
-  /**
-   * Get all blocks for a specific column
-   */
+  const getBlocksForRow = useCallback((rowIndex: number) => {
+    return blocks.filter(block => block.rowIndex === rowIndex);
+  }, [blocks]);
+  
   const getBlocksForColumn = useCallback((columnIndex: number) => {
     return blocks.filter(block => block.columnIndex === columnIndex);
+  }, [blocks]);
+  
+  const getBlocksForColumnAndRow = useCallback((rowIndex: number, columnIndex: number) => {
+    return blocks.filter(block => block.rowIndex === rowIndex && block.columnIndex === columnIndex);
   }, [blocks]);
   
   return {
@@ -301,7 +276,9 @@ const useCVBlockManagement = ({
     addComponent,
     removeComponent,
     updateComponentProps,
+    getBlocksForRow,
     getBlocksForColumn,
+    getBlocksForColumnAndRow,
     onChange
   };
 };
