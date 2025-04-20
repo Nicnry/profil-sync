@@ -1,16 +1,22 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import CVFormColumnSelector from '@/components/cv/selectors/cvFormColumnSelector';
 import CVFormColumnContainer from '@/components/cv/blocks/cvFormColumnContainer';
+import BlockDebugList from '@/components/cv/debug/blockDebugList';
 import Button from '@/components/ui/button';
+import useCVBlockManagement from '@/hooks/useCVBlockManagement';
 import { countAllBlocks, countAllComponents } from '@/utils/helpers';
-import { BlockInfo, CVFormInputs, ColumnCount } from '@/types/cv';
+import { CVFormInputs, ColumnCount } from '@/types/cv';
 
 const CVForm = () => {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-  const [blocks, setBlocks] = useState<BlockInfo[]>([]);
+  
+  const {
+    blocks,
+    onChange: handleBlocksChange
+  } = useCVBlockManagement();
   
   const { 
     register, 
@@ -32,7 +38,7 @@ const CVForm = () => {
       blocks
     };
     
-    console.log('Données du formulaire:', formData, data, blocks);
+    console.log('Données du formulaire:', formData);
     setIsSubmitted(true);
     
     setTimeout(() => {
@@ -44,57 +50,9 @@ const CVForm = () => {
     setValue('columns', columns);
   };
   
-  const handleBlocksChange = useCallback((updatedBlocks: BlockInfo[]) => {
-    setBlocks(updatedBlocks);
-  }, []);
-  
-  const renderBlockDebugList = (blocks: BlockInfo[], depth = 0) => {
-    return blocks.map(block => (
-      <li key={block.id} className="ml-4">
-        {'  '.repeat(depth)}• Colonne {block.columnIndex + 1}: {block.title || 'Sans titre'}
-        {block.components && block.components.length > 0 && (
-          <span className="text-purple-600 text-xs ml-2">
-            ({block.components.length} champ{block.components.length > 1 ? 's' : ''})
-          </span>
-        )}
-        
-        {block.children && block.children.length > 0 && (
-          <ul className="text-xs text-gray-600 space-y-1 ml-4">
-            {block.children.map(child => (
-              <li key={child.id}>
-                {'  '.repeat(depth + 1)}◦ {child.title || 'Sans titre'}
-                {child.components && child.components.length > 0 && (
-                  <span className="text-purple-600 text-xs ml-2">
-                    ({child.components.length} champ{child.components.length > 1 ? 's' : ''})
-                  </span>
-                )}
-                
-                {child.children && child.children.length > 0 && (
-                  <ul className="text-xs text-gray-600 space-y-1 ml-4">
-                    {child.children.map(grandChild => (
-                      <li key={grandChild.id}>
-                        {'  '.repeat(depth + 2)}▪ {grandChild.title || 'Sans titre'}
-                        {grandChild.components && grandChild.components.length > 0 && (
-                          <span className="text-purple-600 text-xs ml-2">
-                            ({grandChild.components.length} champ{grandChild.components.length > 1 ? 's' : ''})
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </li>
-    ));
-  };
-  
   const totalBlockCount = countAllBlocks(blocks);
   const totalComponentCount = countAllComponents(blocks);
   
-  // Vérifier si des erreurs existent dans le formulaire
   const hasErrors = Object.keys(errors).length > 0;
   
   return (
@@ -165,9 +123,7 @@ const CVForm = () => {
             <h4 className="font-medium mb-2 text-sm text-gray-700">
               Structure actuelle ({totalBlockCount} blocs, {totalComponentCount} champs)
             </h4>
-            <ul className="text-xs text-gray-600 space-y-1">
-              {renderBlockDebugList(blocks)}
-            </ul>
+            <BlockDebugList blocks={blocks} />
           </div>
         )}
         
