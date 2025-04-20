@@ -1,4 +1,4 @@
-export type ColumnCount = 1 | 2 | 3;
+import { ColumnCount } from '@/types/cv';
 
 interface CVFormColumnSelectorProps {
   value: ColumnCount;

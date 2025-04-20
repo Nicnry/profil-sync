@@ -1,3 +1,5 @@
+import Button from '@/components/ui/button';
+
 interface CVFormInputTitleProps {
   id: string;
   defaultValue?: string;
@@ -26,17 +28,18 @@ const CVFormInputTitle = ({
       <div className="flex justify-between items-center">
         <label htmlFor={inputId} className="font-medium text-yellow-800">Champ de titre</label>
         {onRemove && (
-          <button
+          <Button
+            variant="danger"
+            size="icon"
+            isRounded
             onClick={onRemove}
-            className="text-red-500 hover:text-red-700"
             aria-label="Supprimer ce champ"
             title="Supprimer ce champ"
-            type="button"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
-          </button>
+          </Button>
         )}
       </div>
       <div className="mt-2">

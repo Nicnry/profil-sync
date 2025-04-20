@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ComponentType, ComponentInfo, NestedBlockInfo } from '@/components/componentTypes';
-import CVFormInputTitle from '@/components/cvFormInputTitle';
-import CVFormInputDateRange from '@/components/cvFormInputDateRange';
+import { ComponentType, ComponentInfo, NestedBlockInfo } from '@/types/cv';
+import CVFormInputTitle from '@/components/cv/inputs/cvFormInputTitle';
+import CVFormInputDateRange from '@/components/cv/inputs/cvFormInputDateRange';
+import Button from '@/components/ui/button';
+import Modal from '@/components/ui/modal';
 
 interface CVFormColumnBlockProps {
   id: string;
@@ -21,85 +23,38 @@ interface CVFormColumnBlockProps {
   depth?: number;
 }
 
-interface ComponentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface ComponentSelectionProps {
   onSelectComponent: (componentType: ComponentType) => void;
 }
 
-const ComponentSelectionModal = ({ isOpen, onClose, onSelectComponent }: ComponentModalProps) => {
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
+const ComponentSelectionContent = ({ onSelectComponent }: ComponentSelectionProps) => {
   const componentOptions = [
     { id: 'title', type: ComponentType.INPUT_TITLE, name: 'Titre' },
     { id: 'from', type: ComponentType.INPUT_FROM, name: 'De / À' }
   ];
 
   return (
-    <div className="fixed inset-0 backdrop-blur-md bg-gray-200 bg-opacity-30 z-50 flex items-center justify-center">
-      <div 
-        ref={modalRef}
-        className="bg-white rounded-lg w-[95%] h-[90vh] overflow-y-auto shadow-lg border border-gray-200"
-      >
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4 border-b pb-2">
-            <h2 className="text-xl font-bold text-gray-800">Blocs disponibles</h2>
-            <button 
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
-              aria-label="Fermer"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 p-2">
+      {componentOptions.map((option) => (
+        <div 
+          key={option.id}
+          onClick={() => onSelectComponent(option.type)}
+          className="border border-gray-200 rounded-md p-3 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors flex flex-col items-center text-center"
+        >
+          <div className="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center mb-2">
+            {option.type === ComponentType.INPUT_TITLE ? (
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
               </svg>
-            </button>
+            ) : (
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            )}
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 p-2">
-            {componentOptions.map((option) => (
-              <div 
-                key={option.id}
-                onClick={() => {
-                  onSelectComponent(option.type);
-                  onClose();
-                }}
-                className="border border-gray-200 rounded-md p-3 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors flex flex-col items-center text-center"
-              >
-                <div className="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center mb-2">
-                  {option.type === ComponentType.INPUT_TITLE ? (
-                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                  )}
-                </div>
-                <h3 className="font-medium text-sm text-gray-800">{option.name}</h3>
-              </div>
-            ))}
-          </div>
+          <h3 className="font-medium text-sm text-gray-800">{option.name}</h3>
         </div>
-      </div>
+      ))}
     </div>
   );
 };
@@ -271,10 +226,11 @@ const CVFormColumnBlock = ({
           </h3>
         )}
         <div className="flex space-x-2">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="icon"
+            isRounded
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-500 hover:text-gray-700"
             aria-label={isExpanded ? "Réduire" : "Développer"}
             title={isExpanded ? "Réduire" : "Développer"}
           >
@@ -287,20 +243,21 @@ const CVFormColumnBlock = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
               </svg>
             )}
-          </button>
+          </Button>
           
           {onRemove && (
-            <button
-              type="button"
+            <Button
+              variant="danger"
+              size="icon"
+              isRounded
               onClick={onRemove}
-              className="text-red-500 hover:text-red-700"
               aria-label="Supprimer ce bloc"
               title="Supprimer ce bloc"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -346,41 +303,49 @@ const CVFormColumnBlock = ({
           
           <div className="flex justify-center mt-4 space-x-2">
             {onAddComponent && (
-              <button
-                type="button"
+              <Button
+                variant="warning"
+                size="icon"
+                isRounded
                 onClick={() => setShowComponentModal(true)}
-                className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 hover:bg-purple-200 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                 aria-label="Ajouter un champ"
                 title="Ajouter un champ"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
-              </button>
+              </Button>
             )}
             
             {onAddChild && depth < 1 && (
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="icon"
+                isRounded
                 onClick={handleAddChild}
-                className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 aria-label="Ajouter un sous-bloc"
                 title="Ajouter un sous-bloc"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
-              </button>
+              </Button>
             )}
           </div>
         </div>
       )}
       
-      <ComponentSelectionModal 
+      <Modal 
         isOpen={showComponentModal}
         onClose={() => setShowComponentModal(false)}
-        onSelectComponent={handleAddComponent}
-      />
+        title="Composants disponibles"
+        size="full"
+      >
+        <ComponentSelectionContent onSelectComponent={(type) => {
+          handleAddComponent(type);
+          setShowComponentModal(false);
+        }} />
+      </Modal>
     </div>
   );
 };

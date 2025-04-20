@@ -2,14 +2,11 @@
 
 import { useState, useCallback } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import CVFormColumnSelector, { ColumnCount } from '@/components/cvFormColumnSelector';
-import CVFormColumnContainer, { BlockInfo } from '@/components/cvFormColumnContainer';
-import { NestedBlockInfo } from '@/components/componentTypes';
-
-interface FormInputs {
-  columns: ColumnCount;
-  blocks?: BlockInfo[];
-}
+import CVFormColumnSelector from '@/components/cv/selectors/cvFormColumnSelector';
+import CVFormColumnContainer from '@/components/cv/blocks/cvFormColumnContainer';
+import Button from '@/components/ui/button';
+import { countAllBlocks, countAllComponents } from '@/utils/helpers';
+import { BlockInfo, CVFormInputs, ColumnCount } from '@/types/cv';
 
 const CVForm = () => {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -21,7 +18,7 @@ const CVForm = () => {
     setValue,
     watch,
     formState: { errors } 
-  } = useForm<FormInputs>({
+  } = useForm<CVFormInputs>({
     defaultValues: {
       columns: 1
     }
@@ -29,7 +26,7 @@ const CVForm = () => {
   
   const selectedColumns = watch('columns');
   
-  const onSubmit: SubmitHandler<FormInputs> = (data) => {
+  const onSubmit: SubmitHandler<CVFormInputs> = (data) => {
     const formData = {
       ...data,
       blocks
@@ -50,58 +47,6 @@ const CVForm = () => {
   const handleBlocksChange = useCallback((updatedBlocks: BlockInfo[]) => {
     setBlocks(updatedBlocks);
   }, []);
-  
-  const countAllBlocks = (blocks: BlockInfo[]) => {
-    let count = blocks.length;
-    
-    blocks.forEach(block => {
-      count += countNestedBlocks(block.children);
-    });
-    
-    return count;
-  };
-  
-  const countNestedBlocks = (children: NestedBlockInfo[]): number => {
-    if (!children || children.length === 0) return 0;
-    
-    let count = children.length;
-    
-    children.forEach(child => {
-      if (child.children && child.children.length > 0) {
-        count += countNestedBlocks(child.children);
-      }
-    });
-    
-    return count;
-  };
-  
-  const countAllComponents = (blocks: BlockInfo[]) => {
-    let count = 0;
-    
-    blocks.forEach(block => {
-      count += block.components ? block.components.length : 0;
-      
-      count += countNestedComponents(block.children);
-    });
-    
-    return count;
-  };
-  
-  const countNestedComponents = (children: NestedBlockInfo[]): number => {
-    if (!children || children.length === 0) return 0;
-    
-    let count = 0;
-    
-    children.forEach(child => {
-      count += child.components ? child.components.length : 0;
-      
-      if (child.children && child.children.length > 0) {
-        count += countNestedComponents(child.children);
-      }
-    });
-    
-    return count;
-  };
   
   const renderBlockDebugList = (blocks: BlockInfo[], depth = 0) => {
     return blocks.map(block => (
@@ -227,13 +172,14 @@ const CVForm = () => {
         )}
         
         <div>
-          <button
+          <Button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            variant="primary"
+            className="w-full"
             disabled={hasErrors}
           >
             Enregistrer la mise en page
-          </button>
+          </Button>
           {hasErrors && (
             <p className="mt-2 text-sm text-red-600 text-center">
               Veuillez corriger les erreurs avant d&apos;enregistrer
