@@ -18,8 +18,8 @@ Cette application offre une solution moderne pour la création de CV en permetta
 
 ```bash
 # Cloner le dépôt
-git clone https://github.com/votre-organisation/generateur-cv.git
-cd generateur-cv
+git clone https://github.com/Nicnry/profil-sync.git
+cd profil-sync
 
 # Installer les dépendances
 npm install
