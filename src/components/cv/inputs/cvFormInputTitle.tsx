@@ -2,7 +2,7 @@ import Button from '@/components/ui/button';
 
 interface CVFormInputTitleProps {
   id: string;
-  defaultValue?: string;
+  defaultValue?: string | undefined;
   onChange?: (value: string) => void;
   onRemove?: () => void;
   error?: string;

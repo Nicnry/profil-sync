@@ -1,0 +1,9 @@
+export { default as CVFormInputTitle } from '@/components/cv/inputs/cvFormInputTitle';
+export { default as CVFormInputDateRange } from '@/components/cv/inputs/cvFormInputDateRange';
+export { default as CVFormInputRichText } from '@/components/cv/inputs/cvFormInputRichText';
+export { default as CVFormInputBulletList } from '@/components/cv/inputs/cvFormInputBulletList';
+export { default as CVFormInputContactInfo } from '@/components/cv/inputs/cvFormInputContactInfo';
+export { default as CVFormInputSkills } from '@/components/cv/inputs/cvFormInputSkills';
+export { default as CVFormInputImage } from '@/components/cv/inputs/cvFormInputImage';
+export { default as CVFormInputLinks } from '@/components/cv/inputs/cvFormInputLinks';
+export { default as CVFormInputLanguages } from '@/components/cv/inputs/cvFormInputLanguages';

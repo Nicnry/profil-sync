@@ -2,8 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ComponentType, ComponentInfo, NestedBlockInfo } from '@/types/cv';
-import CVFormInputTitle from '@/components/cv/inputs/cvFormInputTitle';
-import CVFormInputDateRange from '@/components/cv/inputs/cvFormInputDateRange';
+import { 
+  CVFormInputTitle,
+  CVFormInputDateRange,
+  CVFormInputRichText,
+  CVFormInputBulletList,
+  CVFormInputContactInfo,
+  CVFormInputSkills,
+  CVFormInputImage,
+  CVFormInputLinks,
+  CVFormInputLanguages
+} from '@/components/cv/inputs';
 import Button from '@/components/ui/button';
 import Modal from '@/components/ui/modal';
 import { useCV } from '@/context/cvContext';
@@ -22,12 +31,55 @@ interface ComponentSelectionProps {
 
 const ComponentSelectionContent = ({ onSelectComponent }: ComponentSelectionProps) => {
   const componentOptions = [
-    { id: 'title', type: ComponentType.INPUT_TITLE, name: 'Titre' },
-    { id: 'from', type: ComponentType.INPUT_FROM, name: 'De / À' }
+    { id: 'title', type: ComponentType.INPUT_TITLE, name: 'Titre', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+      </svg>
+    ) },
+    { id: 'date-range', type: ComponentType.INPUT_FROM, name: 'De / À', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+    ) },
+    { id: 'rich-text', type: ComponentType.RICH_TEXT, name: 'Texte riche', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+      </svg>
+    ) },
+    { id: 'bullet-list', type: ComponentType.BULLET_LIST, name: 'Liste à puces', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+      </svg>
+    ) },
+    { id: 'contact-info', type: ComponentType.CONTACT_INFO, name: 'Contact', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+      </svg>
+    ) },
+    { id: 'skills', type: ComponentType.SKILLS, name: 'Compétences', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+      </svg>
+    ) },
+    { id: 'languages', type: ComponentType.LANGUAGES, name: 'Langues', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+      </svg>
+    ) },
+    { id: 'image', type: ComponentType.IMAGE, name: 'Photo', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+    ) },
+    { id: 'links', type: ComponentType.LINKS, name: 'Liens', icon: (
+      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+      </svg>
+    ) },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 p-2">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 p-2">
       {componentOptions.map((option) => (
         <div 
           key={option.id}
@@ -35,15 +87,7 @@ const ComponentSelectionContent = ({ onSelectComponent }: ComponentSelectionProp
           className="border border-gray-200 rounded-md p-3 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors flex flex-col items-center text-center"
         >
           <div className="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center mb-2">
-            {option.type === ComponentType.INPUT_TITLE ? (
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
-            )}
+            {option.icon}
           </div>
           <h3 className="font-medium text-sm text-gray-800">{option.name}</h3>
         </div>
@@ -159,7 +203,7 @@ const CVFormColumnBlock = ({
           <CVFormInputTitle 
             key={component.id} 
             id={component.id} 
-            defaultValue={component.props?.defaultValue || ""}
+            defaultValue={String(component.props?.defaultValue || "")}
             onChange={(value) => {
               updateComponentProps(id, component.id, { defaultValue: value });
             }}
@@ -172,8 +216,8 @@ const CVFormColumnBlock = ({
           <CVFormInputDateRange 
             key={component.id} 
             id={component.id} 
-            fromValue={component.props?.from || ""}
-            toValue={component.props?.to || ""}
+            fromValue={String(component.props?.from || "")}
+            toValue={String(component.props?.to || "")}
             onChange={({ from, to }) => {
               updateComponentProps(id, component.id, { from, to });
             }}
@@ -182,6 +226,111 @@ const CVFormColumnBlock = ({
               from: component.errors?.from,
               to: component.errors?.to
             }}
+          />
+        );
+      case ComponentType.RICH_TEXT:
+        return (
+          <CVFormInputRichText
+            key={component.id}
+            id={component.id}
+            defaultValue={String(component.props?.content) || ""}
+            onChange={(value) => {
+              updateComponentProps(id, component.id, { content: value });
+            }}
+            onRemove={() => removeComponent(id, component.id)}
+            error={component.errors?.content}
+          />
+        );
+      case ComponentType.BULLET_LIST:
+        return (
+          <CVFormInputBulletList
+            key={component.id}
+            id={component.id}
+            items={component.props?.items ? JSON.parse(String(component.props.items)) : []}
+            onChange={(items) => {
+              updateComponentProps(id, component.id, { items: JSON.stringify(items) });
+            }}
+            onRemove={() => removeComponent(id, component.id)}
+            error={component.errors?.items}
+          />
+        );
+      case ComponentType.CONTACT_INFO:
+        return (
+          <CVFormInputContactInfo
+            key={component.id}
+            id={component.id}
+            defaultValue={String(component.props) ? {
+              email: String(component.props?.email) || "",
+              phone: String(component.props?.phone) || "",
+              address: String(component.props?.address) || "",
+              city: String(component.props?.city) || "",
+              postalCode: String(component.props?.postalCode) || "",
+              country: String(component.props?.country) || "",
+            } : {}}
+            onChange={(contactInfo) => {
+              // Conversion de ContactInfo en Record<string, string>
+              const contactProps: Record<string, string> = {};
+              Object.entries(contactInfo).forEach(([key, value]) => {
+                if (value !== undefined) {
+                  contactProps[key] = value as string;
+                }
+              });
+              updateComponentProps(id, component.id, contactProps);
+            }}
+            onRemove={() => removeComponent(id, component.id)}
+            errors={component.errors}
+          />
+        );
+      case ComponentType.SKILLS:
+        return (
+          <CVFormInputSkills
+            key={component.id}
+            id={component.id}
+            skills={component.props?.skills ? JSON.parse(String(component.props.skills)) : []}
+            onChange={(skills) => {
+              updateComponentProps(id, component.id, { skills: JSON.stringify(skills) });
+            }}
+            onRemove={() => removeComponent(id, component.id)}
+            error={component.errors?.skills}
+          />
+        );
+      case ComponentType.LANGUAGES:
+        return (
+          <CVFormInputLanguages
+            key={component.id}
+            id={component.id}
+            languages={component.props?.languages ? JSON.parse(String(component.props.languages)) : []}
+            onChange={(languages) => {
+              updateComponentProps(id, component.id, { languages: JSON.stringify(languages) });
+            }}
+            onRemove={() => removeComponent(id, component.id)}
+            error={component.errors?.languages}
+          />
+        );
+      case ComponentType.IMAGE:
+        return (
+          <CVFormInputImage
+            key={component.id}
+            id={component.id}
+            defaultValue={String(component.props?.imageUrl) || ""}
+            onChange={(imageUrl) => {
+              updateComponentProps(id, component.id, { imageUrl });
+            }}
+            onRemove={() => removeComponent(id, component.id)}
+            error={component.errors?.imageUrl}
+          />
+        );
+      case ComponentType.LINKS:
+        return (
+          <CVFormInputLinks
+            key={component.id}
+            id={component.id}
+            links={component.props?.links ? JSON.parse(String(component.props.links)) : []}
+            onChange={(links) => {
+              updateComponentProps(id, component.id, { links: JSON.stringify(links) });
+            }}
+            onRemove={() => removeComponent(id, component.id)}
+            error={component.errors?.links}
           />
         );
       default:

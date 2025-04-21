@@ -16,7 +16,7 @@ interface CVContextType {
   updateNestedBlockTitle: (parentId: string, childId: string, newTitle: string) => void;
   addComponent: (blockId: string, componentType: ComponentType) => void;
   removeComponent: (blockId: string, componentId: string) => void;
-  updateComponentProps: (blockId: string, componentId: string, newProps: Record<string, string>) => void;
+  updateComponentProps: (blockId: string, componentId: string, newProps: Record<string, string | number | boolean | null | undefined>) => void;
   getBlocksForRow: (rowIndex: number) => BlockInfo[];
   getBlocksForColumnAndRow: (rowIndex: number, columnIndex: number) => BlockInfo[];
   getRowCount: () => number;
@@ -282,7 +282,7 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     });
   }, []);
   
-  const updateComponentProps = useCallback((blockId: string, componentId: string, newProps: Record<string, string>) => {
+  const updateComponentProps = useCallback((blockId: string, componentId: string, newProps: Record<string, string | number | boolean | null | undefined>) => {
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
       

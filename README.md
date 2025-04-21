@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Générateur de CV
 
-## Getting Started
+Une application professionnelle basée sur Next.js 15 qui permet aux utilisateurs de construire efficacement des CV structurés via une interface intuitive de blocs modulaires.
 
-First, run the development server:
+## Présentation
+
+Cette application offre une solution moderne pour la création de CV en permettant aux utilisateurs de définir précisément la structure de leur document et d'organiser leur contenu de manière flexible.
+
+## Fonctionnalités
+
+- **Interface par blocs** : Construction modulaire du CV avec des blocs personnalisables
+- **Mise en page flexible** : Configuration ajustable de colonnes (1 à 3) et rangées
+- **Blocs imbriqués** : Structures hiérarchiques pour une organisation optimale du contenu
+- **Champs spécialisés** : Titres, plages de dates et autres composants dédiés
+- **Responsive** : Interface adaptée à tous les appareils
+
+## Installation
 
 ```bash
+# Cloner le dépôt
+git clone https://github.com/votre-organisation/generateur-cv.git
+cd generateur-cv
+
+# Installer les dépendances
+npm install
+
+# Lancer l'environnement de développement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+L'application sera accessible à l'adresse [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technologies
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Next.js 15** : Framework React avec rendu côté serveur
+- **React 19** : Bibliothèque UI pour construire des interfaces utilisateur
+- **TypeScript** : Pour un code typé et robuste
+- **React Hook Form** : Gestion des formulaires avec validation
+- **Tailwind CSS 4** : Styles utilitaires pour un design rapide et cohérent
+- **Context API** : Gestion d'état globale pour les données du CV
 
-## Learn More
+## Utilisation
 
-To learn more about Next.js, take a look at the following resources:
+### Création d'un CV
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Sélectionnez la structure de page (nombre de rangées)
+2. Pour chaque rangée, définissez le nombre de colonnes
+3. Ajoutez des blocs dans chaque colonne
+4. Ajoutez des composants (titres, dates, etc.) à vos blocs
+5. Complétez les informations demandées
+6. Enregistrez votre mise en page
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Développement
 
-## Deploy on Vercel
+### Commandes disponibles
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Démarrer en mode développement
+npm run dev
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Construire pour la production
+npm run build
+
+# Démarrer en mode production
+npm run start
+
+# Linter
+npm run lint
+```
+
+### Extension du projet
+
+Pour ajouter un nouveau type de champ au générateur :
+
+1. Créez un composant dans `components/cv/inputs`
+2. Définissez l'interface dans `types/cv.ts`
+3. Mettez à jour l'enum `ComponentType` dans `types/cv.ts`
+4. Intégrez le composant dans `cvFormColumnBlock.tsx`
+
+## Licence
+
+[MIT](LICENSE)
+
+## Contributions
+
+Ce projet est ouvert aux contributions. Veuillez consulter les directives de contribution avant de soumettre des pull requests.
+
+---
+
+Développé avec Next.js 15 et React 19
