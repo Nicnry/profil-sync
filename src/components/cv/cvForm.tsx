@@ -1,13 +1,16 @@
 'use client';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
+import { useCallback, useMemo } from 'react';
 import CVFormRowSelector from '@/components/cv/selectors/cvFormRowSelector';
 import CVFormRowContainer from '@/components/cv/blocks/cvFormRowContainer';
-import BlockDebugList from '@/components/cv/debug/blockDebugList';
 import Button from '@/components/ui/button';
-import { countAllBlocks, countAllComponents } from '@/utils/helpers';
 import { CVFormInputs, RowCount } from '@/types/cv';
 import { useCV } from '@/context/cvContext';
+import FormErrors, { ERROR_MESSAGES } from '@/components/cv/form/formErrors';
+import SuccessMessage from '@/components/cv/form/successMessage';
+import RowDescription from '@/components/cv/form/rowDescription';
+import DebugSection from '@/components/cv/form/debugSection';
 
 const CVForm = () => {
   const { 
@@ -33,62 +36,30 @@ const CVForm = () => {
   
   const selectedRowCount = watch('rowCount');
   
-  const onSubmit: SubmitHandler<CVFormInputs> = (data) => {
+  const onSubmit: SubmitHandler<CVFormInputs> = useCallback((data) => {
     saveCV(data);
-  };
+  }, [saveCV]);
   
-  const handleRowCountChange = (newRowCount: RowCount) => {
+  const handleRowCountChange = useCallback((newRowCount: RowCount) => {
     setValue('rowCount', newRowCount);
     setRowCount(newRowCount);
-  };
+  }, [setValue, setRowCount]);
   
-  const totalBlockCount = countAllBlocks(blocks);
-  const totalComponentCount = countAllComponents(blocks);
-  
-  const hasErrors = Object.keys(errors).length > 0;
-  
-  const getRowDescription = (index: number, totalRows: number) => {
-    if (totalRows === 1) return "pleine page";
-    if (totalRows === 2) {
-      return index === 0 ? "en-tête" : "contenu principal";
-    }
-    if (totalRows === 3) {
-      if (index === 0) return "en-tête";
-      if (index === 1) return "contenu principal";
-      return "pied de page";
-    }
-    return `rangée ${index + 1}`;
-  };
+  const hasErrors = useMemo(() => Object.keys(errors).length > 0, [errors]);
   
   return (
     <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold mb-6">Mise en page du CV</h2>
       
-      {isSubmitted && (
-        <div className="mb-6 p-3 bg-green-100 text-green-700 rounded">
-          Configuration enregistrée ! Vérifiez la console pour voir les détails.
-        </div>
-      )}
+      {isSubmitted && <SuccessMessage />}
       
-      {hasErrors && (
-        <div className="mb-6 p-3 bg-red-100 text-red-700 rounded">
-          <p className="font-medium">Veuillez corriger les erreurs suivantes :</p>
-          <ul className="list-disc pl-5 mt-2">
-            {errors.rowCount && (
-              <li>Vous devez sélectionner un nombre de rangées valide</li>
-            )}
-            {errors.blocks && (
-              <li>Veuillez configurer au moins un bloc pour votre CV</li>
-            )}
-          </ul>
-        </div>
-      )}
+      {hasErrors && <FormErrors errors={errors} />}
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <input 
           type="hidden" 
           {...register('rowCount', { 
-            required: "Vous devez sélectionner un nombre de rangées" 
+            required: ERROR_MESSAGES.REQUIRED_ROW_COUNT 
           })} 
         />
         
@@ -103,19 +74,11 @@ const CVForm = () => {
           {errors.rowCount && (
             <p className="mt-1 text-sm text-red-600">{errors.rowCount.message}</p>
           )}
-          <div className="mt-2 text-xs text-gray-500">
-            <ul className="list-disc pl-4">
-              {selectedRowCount >= 1 && (
-                <li>Rangée 1: {getRowDescription(0, selectedRowCount)}</li>
-              )}
-              {selectedRowCount >= 2 && (
-                <li>Rangée 2: {getRowDescription(1, selectedRowCount)}</li>
-              )}
-              {selectedRowCount >= 3 && (
-                <li>Rangée 3: {getRowDescription(2, selectedRowCount)}</li>
-              )}
-            </ul>
-          </div>
+          
+          <RowDescription 
+            rowCount={getRowCount() as RowCount}
+            selectedRowCount={selectedRowCount}
+          />
         </div>
         
         <div className="mb-6">
@@ -133,14 +96,7 @@ const CVForm = () => {
           )}
         </div>
         
-        {blocks.length > 0 && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h4 className="font-medium mb-2 text-sm text-gray-700">
-              Structure actuelle ({totalBlockCount} blocs, {totalComponentCount} champs)
-            </h4>
-            <BlockDebugList blocks={blocks} />
-          </div>
-        )}
+        <DebugSection blocks={blocks} />
         
         <div>
           <Button
@@ -153,7 +109,7 @@ const CVForm = () => {
           </Button>
           {hasErrors && (
             <p className="mt-2 text-sm text-red-600 text-center">
-              Veuillez corriger les erreurs avant d&apos;enregistrer
+              {ERROR_MESSAGES.FIX_ERRORS}
             </p>
           )}
         </div>
