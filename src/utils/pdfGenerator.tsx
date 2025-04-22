@@ -1,4 +1,4 @@
-import { BlockInfo, RowConfig, ComponentType, NestedBlockInfo, ComponentInfo, ColumnCount } from '@/types/cv';
+import { BlockInfo, RowConfig, ComponentType, NestedBlockInfo, ComponentInfo } from '@/types/cv';
 import { 
   Document as PDFDocument, 
   Page, 
