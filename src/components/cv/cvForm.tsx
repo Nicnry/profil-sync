@@ -11,6 +11,7 @@ import FormErrors, { ERROR_MESSAGES } from '@/components/cv/form/formErrors';
 import SuccessMessage from '@/components/cv/form/successMessage';
 import RowDescription from '@/components/cv/form/rowDescription';
 import DebugSection from '@/components/cv/form/debugSection';
+import ExportPdfButton from '@/components/cv/exportPdfButton';
 
 const CVForm = () => {
   const { 
@@ -107,6 +108,7 @@ const CVForm = () => {
           >
             Enregistrer la mise en page
           </Button>
+          <ExportPdfButton />
           {hasErrors && (
             <p className="mt-2 text-sm text-red-600 text-center">
               {ERROR_MESSAGES.FIX_ERRORS}

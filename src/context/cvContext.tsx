@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { BlockInfo, NestedBlockInfo, ComponentInfo, ComponentType, ColumnCount, RowCount, CVFormInputs, RowConfig } from '@/types/cv';
 import { generateId, cloneBlocks } from '@/utils/helpers';
 
@@ -48,6 +48,10 @@ export const CVProvider: React.FC<CVProviderProps> = ({
     }))
   );
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+
+  useEffect(() => {
+    console.log('État actuel des blocs:', JSON.stringify(blocks, null, 2));
+  }, [blocks]);
 
   const getRowCount = useCallback(() => {
     return rowsConfig.length;
@@ -123,11 +127,43 @@ export const CVProvider: React.FC<CVProviderProps> = ({
   }, []);
   
   const updateBlockTitle = useCallback((blockId: string, newTitle: string) => {
-    setBlocks(prevBlocks => 
-      prevBlocks.map(block => 
-        block.id === blockId ? { ...block, title: newTitle } : block
-      )
-    );
+    console.log(`Mise à jour du titre du bloc ${blockId} en: "${newTitle}"`);
+    
+    setBlocks(prevBlocks => {
+      const blockIndex = prevBlocks.findIndex(block => block.id === blockId);
+      
+      if (blockIndex !== -1) {
+        const updatedBlocks = [...prevBlocks];
+        updatedBlocks[blockIndex] = {
+          ...updatedBlocks[blockIndex],
+          title: newTitle
+        };
+        return updatedBlocks;
+      } else {
+        const updatedBlocks = cloneBlocks(prevBlocks);
+        
+        const updateNestedTitle = (blocks: BlockInfo[] | NestedBlockInfo[]): boolean => {
+          for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+            
+            if (block.id === blockId) {
+              block.title = newTitle;
+              return true;
+            }
+            
+            if (block.children && block.children.length > 0) {
+              const foundInChildren = updateNestedTitle(block.children);
+              if (foundInChildren) return true;
+            }
+          }
+          
+          return false;
+        };
+        
+        updateNestedTitle(updatedBlocks);
+        return updatedBlocks;
+      }
+    });
   }, []);
   
   const addNestedBlock = useCallback((parentId: string, title?: string) => {
@@ -137,6 +173,8 @@ export const CVProvider: React.FC<CVProviderProps> = ({
       children: [],
       components: []
     };
+    
+    console.log(`Ajout d'un sous-bloc au parent ${parentId} avec le titre: "${title || 'Sous-bloc'}"`);
     
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
@@ -192,25 +230,31 @@ export const CVProvider: React.FC<CVProviderProps> = ({
   }, []);
   
   const updateNestedBlockTitle = useCallback((parentId: string, childId: string, newTitle: string) => {
+    console.log(`Mise à jour du titre du sous-bloc ${childId} avec parent ${parentId} en: "${newTitle}"`);
+    
     setBlocks(prevBlocks => {
       const updatedBlocks = cloneBlocks(prevBlocks);
+      let updated = false;
       
       const findAndUpdateChildTitle = (blocks: BlockInfo[] | NestedBlockInfo[]): boolean => {
         for (let i = 0; i < blocks.length; i++) {
           const block = blocks[i];
           
           if (block.id === parentId) {
-            for (let j = 0; j < block.children.length; j++) {
-              if (block.children[j].id === childId) {
-                block.children[j].title = newTitle;
-                return true;
-              }
+            const childIndex = block.children.findIndex(child => child.id === childId);
+            if (childIndex !== -1) {
+              block.children[childIndex] = {
+                ...block.children[childIndex],
+                title: newTitle
+              };
+              updated = true;
+              return true;
             }
           }
           
-          if (block.children.length > 0) {
-            const foundInChildren = findAndUpdateChildTitle(block.children);
-            if (foundInChildren) return true;
+          if (block.children && block.children.length > 0) {
+            const updatedInChildren = findAndUpdateChildTitle(block.children);
+            if (updatedInChildren) return true;
           }
         }
         
@@ -218,6 +262,29 @@ export const CVProvider: React.FC<CVProviderProps> = ({
       };
       
       findAndUpdateChildTitle(updatedBlocks);
+      
+      if (!updated) {
+        const updateAnyNestedTitle = (blocks: BlockInfo[] | NestedBlockInfo[]): boolean => {
+          for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+            
+            if (block.id === childId) {
+              block.title = newTitle;
+              return true;
+            }
+            
+            if (block.children && block.children.length > 0) {
+              const foundInChildren = updateAnyNestedTitle(block.children);
+              if (foundInChildren) return true;
+            }
+          }
+          
+          return false;
+        };
+        
+        updateAnyNestedTitle(updatedBlocks);
+      }
+      
       return updatedBlocks;
     });
   }, []);
@@ -323,7 +390,7 @@ export const CVProvider: React.FC<CVProviderProps> = ({
       blocks
     };
     
-    console.log('Données du formulaire:', formData);
+    console.log('Données du formulaire:', JSON.stringify(formData, null, 2));
     setIsSubmitted(true);
     
     setTimeout(() => {

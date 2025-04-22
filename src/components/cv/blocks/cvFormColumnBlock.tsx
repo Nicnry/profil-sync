@@ -109,7 +109,7 @@ const CVFormColumnBlock = ({
     addNestedBlock,
     addComponent,
     removeComponent,
-    updateComponentProps
+    updateComponentProps,
   } = useCV();
 
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
